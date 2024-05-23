@@ -1,0 +1,11 @@
+{
+  "name": "MTRPZ_Lab.1",
+  "version": "1.0.0",
+  "description": "A program for convert MD to HTML",
+  "main": "main.js",
+  "scripts": {
+    "test": "test program"
+  },
+  "author": "Ponochovnyi Anton",
+  "license": "ISC"
+}
