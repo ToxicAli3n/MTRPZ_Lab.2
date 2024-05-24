@@ -2,8 +2,7 @@ const fs = require("fs").promises;
 
 async function validateMarkdownPath(path) {
     if (!path.endsWith(".md")) {
-        console.error("Not a Markdown file.");
-        return null;
+        throw new Error("Not a Markdown file.");
     }
 
     try {
@@ -12,16 +11,14 @@ async function validateMarkdownPath(path) {
             console.log("File on this path with md extension exists and contains data.");
             return path;
         } else {
-            console.error("File exists but is empty.");
-            return null;
+            throw new Error("File exists but is empty.");
         }
     } catch (err) {
         if (err.code === "ENOENT") {
-            console.error("Wrong path to md file.");
+            throw new Error("Wrong path to md file.");
         } else {
-            console.error("Error reading file:", err);
+            throw new Error("Error reading file: " + err.message);
         }
-        return null;
     }
 }
 
