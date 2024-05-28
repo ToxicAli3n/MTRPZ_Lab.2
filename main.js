@@ -26,7 +26,7 @@ async function main() {
             convertedMd = parserHTML(data, formattingAnsi);
         }
         if (commandArgs.outputFile && convertedMd) {
-            await fs.writeFile(commandArgs.outputFile);
+            await fs.writeFile(commandArgs.outputFile, convertedMd);
             console.log("File created and content written successfully.");
         } else {
             console.log(convertedMd);
