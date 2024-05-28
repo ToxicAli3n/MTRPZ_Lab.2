@@ -1,7 +1,8 @@
 const fs = require("fs").promises;
+const { validateCommandLineArgs } = require("./validateCommandLineArgs");
 const { validateMarkdownPath } = require("./validateMarkdownPath");
 const { parserHTML } = require("./parserHTML");
-const { validateCommandLineArgs } = require("./validateCommandLineArgs");
+const { formattingHTML, formattingAnsi } = require("./regexPatterns");
 
 async function main() {
     const args = process.argv.slice(2);
@@ -14,13 +15,21 @@ async function main() {
 
     try {
         const data = await fs.readFile(mdRightPath, "utf-8");
-        const html = parserHTML(data);
-
-        if (commandArgs.outputFile) {
-            await fs.writeFile(commandArgs.outputFile, html);
-            console.log("Successful creation of file with written content.");
+        let convertedMd;
+        if (commandArgs.format === "html") {
+            convertedMd = parserHTML(data, formattingHTML);
+        } else if (commandArgs.format === "ansi") {
+            convertedMd = parserHTML(data, formattingAnsi);
+        } else if (!commandArgs.format && commandArgs.outputFile) {
+            convertedMd = parserHTML(data, formattingHTML);
+        } else if (!commandArgs.outputFile && !commandArgs.format) {
+            convertedMd = parserHTML(data, formattingAnsi);
+        }
+        if (commandArgs.outputFile && convertedMd) {
+            await fs.writeFile(commandArgs.outputFile, converted);
+            console.log("File created and content written successfully.");
         } else {
-            console.log(html);
+            console.log(convertedMd);
         }
     } catch (error) {
         console.error(`Error: ${error.message}`);
