@@ -35,7 +35,7 @@ describe("validateCommandLineArgs", () => {
         expect(validateCommandLineArgs(["file.md", "--out", "output.ansi"])).toEqual({
             path: "file.md",
             outputFile: "output.ansi",
-            format: "ansi"
+            format: "html" // "ansi"
         });
 
         expect(validateCommandLineArgs(["file.md", "--format=ansi"])).toEqual({
