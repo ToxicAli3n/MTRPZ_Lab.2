@@ -1,61 +1,51 @@
+const { HTMLconvert } = require('./HTMLconvert');
 const { invalidPatterns } = require('./invalidPatterns');
-const { formattingPatterns } = require('./regexPatterns');
 
 function detectMistakes(markdown) {
     return invalidPatterns.filter(({ pattern }) => pattern.test(markdown));
 }
 
-function extractCodeBlocks(markdown) {
+function extractCodeBlocks(markdown, format) {
     const regex = /\`\`\`([\s\S]+?)\`\`\`/g;
     const matches = [...markdown.matchAll(regex)];
     return matches.map(match => ({
         original: match[0],
-        replaced: match[0].replace(regex, "<pre>$1</pre>")
+        replaced: format.type === 'HTML' ? match[0].replace(regex, "<pre>$1</pre>") : match[0].replace(regex, "\x1b[7m$1\x1b[0m")
     }));
 }
 
-function splitParagraphs(markdown) {
-    const paragraphs = markdown.split(/([a-zA-Z0-9]*)^\s*$/gm).filter(Boolean);
-    return paragraphs.map(paragraph => `<p>${paragraph.trim()}</p>`).join("\n");
+function splitParagraphs(markdown, format) {
+    const paragraphs = markdown.split(/\n\s*\n/gm).filter(Boolean);
+    return paragraphs.map(paragraph => format.type === 'HTML' ? `<p>${paragraph.trim()}</p>` : `${paragraph.trim()}`).join("\n");
 }
 
-function applyFormatting(html) {
+function applyFormatting(content, formattingPatterns) {
     formattingPatterns.forEach(({ pattern, replacement }) => {
-        html = html.replace(pattern, replacement);
+        content = content.replace(pattern, replacement);
     });
-    return html;
+    return content;
 }
 
-function restoreCodeBlocks(html, matches) {
-    return html.replace(/<pre>[\s\S]*?<\/pre>/g, () => {
+function restoreCodeBlocks(content, matches, format) {
+    const regex = format.type === 'HTML' ? /<pre>[\s\S]*?<\/pre>/g : /\x1b\[7m[\s\S]+?\x1b\[0m/g;
+    return content.replace(regex, () => {
         const element = matches.shift();
-        return element.replaced;
+        return element ? element.replaced : '';
     });
 }
 
-function parserHTML(markdown) {
+function parserHTML(markdown, format) {
     const mistakes = detectMistakes(markdown);
     if (mistakes.length > 0) {
-        console.log("Wrong file");
-        return;
+        throw Error("Wrong file");
     }
 
-    const codeBlocks = extractCodeBlocks(markdown);
-    let htmlContent = splitParagraphs(markdown);
-    htmlContent = applyFormatting(htmlContent);
-    const replacedText = restoreCodeBlocks(htmlContent, codeBlocks);
+    const codeBlocks = extractCodeBlocks(markdown, format);
+    let content = splitParagraphs(markdown, format);
+    content = applyFormatting(content, format.regExp);
+    const replacedText = restoreCodeBlocks(content, codeBlocks, format);
 
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    ${replacedText}
-</body>
-</html>`;
+    return format.type === 'HTML' ? HTMLconvert(replacedText) : replacedText;
 }
 
 module.exports = { parserHTML };
