@@ -4,8 +4,11 @@
   "description": "A program for convert MD to HTML",
   "main": "main.js",
   "scripts": {
-    "test": "test program"
+    "test": "jest"
   },
   "author": "Ponochovnyi Anton",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
 }
